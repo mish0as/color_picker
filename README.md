@@ -1,7 +1,6 @@
 # 🎨 Modern Color Picker
 
-![Color Picker Demo](https://via.placeholder.com/800x400/6C5CE7/FFFFFF?text=Modern+Color+Picker)  
-*A sleek tool for extracting colors from images and creating beautiful palettes*
+#Demo- https://mish0as.github.io/color_picker/
 
 ## ✨ Features
 
