@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Color Picker Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+      --primary: #6C5CE7;
+      --primary-light: #a29bfe;
+      --primary-dark: #5649BE;
+      --text: #2D3436;
+      --text-light: #636E72;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --border: #dfe6e9;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      --radius: 12px;
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      --glass: rgba(255, 255, 255, 0.2);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      margin: 0;
+      padding: 1.5rem 1rem;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem;
+      background: linear-gradient(45deg, var(--primary), #00CEC9);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: var(--text-light);
+      font-size: 1rem;
+      max-width: 600px;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: var(--transition);
+      border: 1px solid var(--border);
+    }
+
+    #dropZone {
+      border: 2px dashed var(--border);
+      padding: 3rem 1.5rem;
+      border-radius: var(--radius);
+      background: var(--card-bg);
+      margin: 0 auto;
+      transition: var(--transition);
+      text-align: center;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      background-color: var(--glass);
+    }
+
+    #dropZone.dragover {
+      background: rgba(108, 92, 231, 0.1);
+      border-color: var(--primary);
+    }
+
+    #dropZone p {
+      margin: 0 0 1rem;
+      color: var(--text-light);
+      font-size: 1rem;
+    }
+
+    .upload-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 12px rgba(108, 92, 231, 0.2);
+    }
+
+    .upload-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(108, 92, 231, 0.3);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .image-container {
+      position: relative;
+      margin: 1.5rem 0;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      cursor: crosshair;
+    }
+
+    .lens {
+      position: absolute;
+      pointer-events: none;
+      display: none;
+      z-index: 10;
+      border: 2px solid var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+      width: 150px;
+      height: 150px;
+    }
+
+    .color-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin: 1.5rem 0;
+    }
+
+    .color-display {
+      width: 70px;
+      height: 70px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+
+    .color-values {
+      text-align: left;
+      background: var(--card-bg);
+      padding: 1.25rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      min-width: 220px;
+      border: 1px solid var(--border);
+    }
+
+    .color-values p {
+      margin: 0.4rem 0;
+      font-family: 'SF Mono', monospace;
+      font-size: 0.9rem;
+    }
+
+    .copy-btn {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: none;
+      padding: 0.35rem 0.7rem;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-left: 0.5rem;
+      font-weight: 500;
+    }
+
+    .copy-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .palette-title {
+      text-align: center;
+      margin: 2rem 0 1rem;
+      font-weight: 600;
+      color: var(--text);
+      font-size: 1.25rem;
+    }
+
+    .palette {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .color-swatch {
+      width: 60px;
+      height: 60px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .color-swatch:hover {
+      transform: scale(1.1) translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .color-swatch::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      font-size: 0.7rem;
+      padding: 0.4rem;
+      text-align: center;
+      transform: translateY(100%);
+      transition: var(--transition);
+      font-weight: 500;
+    }
+
+    .color-swatch:hover::after {
+      transform: translateY(0);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(108, 92, 231, 0.2);
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      box-shadow: 0 6px 16px rgba(108, 92, 231, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      box-shadow: none;
+    }
+
+    .btn-outline:hover {
+      background: rgba(108, 92, 231, 0.1);
+      box-shadow: none;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--text);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transition: var(--transition);
+      z-index: 100;
+      font-weight: 500;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.75rem;
+      }
+      
+      .subtitle {
+        font-size: 0.9rem;
+      }
+      
+      .color-info {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .palette {
+        gap: 0.75rem;
+        padding: 1rem;
+      }
+      
+      .color-swatch {
+        width: 50px;
+        height: 50px;
+      }
+      
+      .btn {
+        padding: 0.65rem 1.25rem;
+      }
+    }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Modern Color Picker</h1>
+      <p class="subtitle">Extract colors from any image, create beautiful palettes, and get precise color values for your designs.</p>
+    </header>
+
+    <div id="dropZone" class="card">
+      <p>Drag & drop an image anywhere or</p>
+      <label for="imageInput" class="upload-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 10px;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        Select Image
+      </label>
+      <input type="file" accept="image/*" id="imageInput" />
+    </div>
+
+    <div id="imageContainer" class="image-container" style="display: none;">
+      <canvas id="canvas"></canvas>
+    </div>
+    <canvas class="lens" id="lens" width="180" height="180"></canvas>
+
+    <div id="colorInfo" class="color-info" style="display: none;">
+      <div id="colorDisplay" class="color-display"></div>
+      <div id="colorValues" class="color-values">
+        <p><strong>HEX:</strong> <span id="hexValue">#------</span> <button class="copy-btn" id="copyHex">Copy</button></p>
+        <p><strong>RGB:</strong> <span id="rgbValue">rgb(--, --, --)</span> <button class="copy-btn" id="copyRgb">Copy</button></p>
+      </div>
+    </div>
+
+    <h3 id="paletteTitle" class="palette-title" style="display: none;">Color Palette</h3>
+    
+    <div id="palette" class="palette" style="display: none;"></div>
+
+    <div class="actions">
+      <button id="downloadBtn" class="btn" style="display: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 10px;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        Download Palette
+      </button>
+      <button id="clearBtn" class="btn btn-outline" style="display: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 10px;">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const lens = document.getElementById("lens");
+    const lctx = lens.getContext("2d");
+    const imageInput = document.getElementById("imageInput");
+    const dropZone = document.getElementById("dropZone");
+    const paletteDiv = document.getElementById("palette");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const imageContainer = document.getElementById("imageContainer");
+    const colorInfo = document.getElementById("colorInfo");
+    const colorDisplay = document.getElementById("colorDisplay");
+    const hexValue = document.getElementById("hexValue");
+    const rgbValue = document.getElementById("rgbValue");
+    const paletteTitle = document.getElementById("paletteTitle");
+    const toast = document.getElementById("toast");
+    const copyHex = document.getElementById("copyHex");
+    const copyRgb = document.getElementById("copyRgb");
+    let zoom = 10;
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+
+    // Upload or Drop
+    imageInput.addEventListener("change", e => loadImage(e.target.files[0]));
+    dropZone.addEventListener("dragover", e => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+    dropZone.addEventListener("drop", e => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      loadImage(e.dataTransfer.files[0]);
+    });
+
+    function loadImage(file) {
+      if (!file.type.match('image.*')) {
+        showToast("Please select an image file");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        img.onload = () => {
+          canvas.width = Math.min(img.width, 1000);
+          canvas.height = Math.min(img.height, 800);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          extractPalette(img);
+          
+          // Show UI elements
+          imageContainer.style.display = "block";
+          colorInfo.style.display = "flex";
+          paletteTitle.style.display = "block";
+          paletteDiv.style.display = "flex";
+          downloadBtn.style.display = "flex";
+          clearBtn.style.display = "flex";
+          
+          // Hide drop zone
+          dropZone.style.display = "none";
+        };
+        img.onerror = () => showToast("Error loading image");
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function extractPalette(image) {
+      const colorThief = new ColorThief();
+      let colors;
+      
+      try {
+        colors = colorThief.getPalette(image, 8);
+      } catch (e) {
+        showToast("Error extracting colors");
+        return;
+      }
+      
+      paletteDiv.innerHTML = "";
+      colors.forEach(rgb => {
+        const hex = rgbToHex(...rgb);
+        const div = document.createElement("div");
+        div.className = "color-swatch";
+        div.style.background = hex;
+        div.title = `${hex} | rgb(${rgb.join(',')})`;
+        div.onclick = () => {
+          updateColorDisplay(hex, rgb);
+        };
+        paletteDiv.appendChild(div);
+      });
+    }
+
+    function rgbToHex(r, g, b) {
+      return "#" + [r, g, b].map(x => x.toString(16).padStart(2, "0")).join("");
+    }
+
+    function showLens(x, y, mouseX, mouseY) {
+      const size = lens.width / zoom;
+      const sx = x - size / 2;
+      const sy = y - size / 2;
+      lctx.imageSmoothingEnabled = false;
+      lctx.clearRect(0, 0, lens.width, lens.height);
+      lctx.drawImage(canvas, sx, sy, size, size, 0, 0, lens.width, lens.height);
+
+      // Pixel Grid
+      const pixelSize = lens.width / size;
+      lctx.strokeStyle = "rgba(67, 97, 238, 0.3)";
+      for (let i = 0; i <= size; i++) {
+        lctx.beginPath();
+        lctx.moveTo(i * pixelSize, 0);
+        lctx.lineTo(i * pixelSize, lens.height);
+        lctx.stroke();
+        lctx.beginPath();
+        lctx.moveTo(0, i * pixelSize);
+        lctx.lineTo(lens.width, i * pixelSize);
+        lctx.stroke();
+      }
+
+      // Center Selector
+      lctx.strokeStyle = "#4361ee";
+      lctx.lineWidth = 2;
+      const cx = Math.floor(size / 2) * pixelSize;
+      const cy = Math.floor(size / 2) * pixelSize;
+      lctx.strokeRect(cx, cy, pixelSize, pixelSize);
+
+lens.style.left = `${mouseX + 10}px`;  // Reduced from 20px
+lens.style.top = `${mouseY - lens.height / 2}px`;
+      lens.style.display = "block";
+    }
+
+    canvas.addEventListener("mousemove", e => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor(e.clientX - rect.left);
+      const y = Math.floor(e.clientY - rect.top);
+      showLens(x, y, e.clientX, e.clientY);
+    });
+
+    canvas.addEventListener("mouseleave", () => lens.style.display = "none");
+
+    canvas.addEventListener("click", e => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor(e.clientX - rect.left);
+      const y = Math.floor(e.clientY - rect.top);
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+      const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+      updateColorDisplay(hex, [pixel[0], pixel[1], pixel[2]]);
+    });
+
+    function updateColorDisplay(hex, rgb) {
+      colorDisplay.style.background = hex;
+      hexValue.textContent = hex;
+      hexValue.style.color = hex;
+      rgbValue.textContent = `rgb(${rgb.join(', ')})`;
+    }
+
+    copyHex.addEventListener("click", () => {
+      const hex = hexValue.textContent;
+      copyToClipboard(hex);
+    });
+
+    copyRgb.addEventListener("click", () => {
+      const rgb = rgbValue.textContent;
+      copyToClipboard(rgb);
+    });
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("Copied to clipboard: " + text);
+      }).catch(() => {
+        showToast("Failed to copy");
+      });
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+    downloadBtn.addEventListener("click", () => {
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = paletteDiv.childNodes.length * 120;
+      tempCanvas.height = 120;
+      const tempCtx = tempCanvas.getContext("2d");
+      
+      // Draw color swatches
+      paletteDiv.childNodes.forEach((div, i) => {
+        tempCtx.fillStyle = div.style.background;
+        tempCtx.fillRect(i * 120, 0, 120, 120);
+        
+        // Add text labels
+        tempCtx.fillStyle = getContrastColor(div.style.background);
+        tempCtx.font = "bold 16px 'Inter', sans-serif";
+        tempCtx.textAlign = "center";
+        tempCtx.fillText(div.title.split(" | ")[0], i * 120 + 60, 70);
+      });
+      
+      const link = document.createElement("a");
+      link.download = "color-palette.png";
+      link.href = tempCanvas.toDataURL();
+      link.click();
+    });
+
+    function getContrastColor(hexColor) {
+      // Convert hex to RGB
+      const r = parseInt(hexColor.substr(1, 2), 16);
+      const g = parseInt(hexColor.substr(3, 2), 16);
+      const b = parseInt(hexColor.substr(5, 2), 16);
+      
+      // Calculate luminance
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.5 ? "#000000" : "#ffffff";
+    }
+
+    clearBtn.addEventListener("click", () => {
+      // Reset the app
+      imageContainer.style.display = "none";
+      colorInfo.style.display = "none";
+      paletteTitle.style.display = "none";
+      paletteDiv.style.display = "none";
+      downloadBtn.style.display = "none";
+      clearBtn.style.display = "none";
+      
+      // Show drop zone again
+      dropZone.style.display = "block";
+    });
+  </script>
+</body>
+</html>
